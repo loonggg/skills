@@ -11,4 +11,5 @@
 
 ## 公众号
 欢迎大家关注我的公众号：非著名程序员，每天分享 AI 技术和副业赚钱的干货。
+
 ![非著名程序员](https://github.com/loonggg/skills/blob/main/raw/qrcode_gzh.jpg?raw=true)
