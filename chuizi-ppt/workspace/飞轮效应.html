@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财富飞轮效应</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: 'PingFang';
+            src: local('PingFang SC'), local('.PingFang SC'), local('PingFang-SC');
+        }
+
+        body {
+            font-family: 'PingFang', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            padding: 60px;
+        }
+
+        .slide.active {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        /* 深色渐变背景变体 */
+        .slide.gradient-1 {
+            background: linear-gradient(180deg, #0d0d0d 0%, #1f1f1f 50%, #0d0d0d 100%);
+        }
+
+        .slide.gradient-2 {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+        }
+
+        .slide.gradient-3 {
+            background: radial-gradient(ellipse at center, #2a2a2a 0%, #0a0a0a 70%);
+        }
+
+        /* 主标题样式 */
+        .main-title {
+            font-size: clamp(48px, 8vw, 120px);
+            font-weight: 200;
+            color: #ffffff;
+            text-align: center;
+            line-height: 1.3;
+            letter-spacing: 0.02em;
+            margin-bottom: 40px;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+        }
+
+        .title-accent {
+            color: #E74C3C;
+            font-weight: 600;
+        }
+
+        /* 副标题 */
+        .subtitle {
+            font-size: clamp(20px, 3vw, 36px);
+            font-weight: 300;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            max-width: 900px;
+            line-height: 1.6;
+            margin-top: 30px;
+        }
+
+        /* 强调文字 */
+        .highlight {
+            color: #E74C3C;
+            font-weight: 500;
+        }
+
+        /* 三个核心动作容器 */
+        .three-actions {
+            display: flex;
+            gap: 60px;
+            margin-top: 60px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .action-item {
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .action-item:nth-child(1) { animation-delay: 0.2s; }
+        .action-item:nth-child(2) { animation-delay: 0.4s; }
+        .action-item:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .action-number {
+            font-size: 72px;
+            font-weight: 100;
+            color: rgba(255,255,255,0.15);
+            margin-bottom: -20px;
+        }
+
+        .action-title {
+            font-size: clamp(42px, 6vw, 72px);
+            font-weight: 200;
+            color: #ffffff;
+        }
+
+        .action-desc {
+            font-size: clamp(14px, 2vw, 20px);
+            color: rgba(255,255,255,0.5);
+            margin-top: 15px;
+            font-weight: 300;
+        }
+
+        /* 引用样式 */
+        .quote-container {
+            max-width: 1000px;
+            text-align: center;
+        }
+
+        .quote-mark {
+            font-size: 120px;
+            color: #E74C3C;
+            opacity: 0.3;
+            line-height: 0.5;
+            font-weight: 100;
+        }
+
+        .quote-text {
+            font-size: clamp(24px, 4vw, 42px);
+            font-weight: 300;
+            color: #ffffff;
+            line-height: 1.6;
+            margin: 30px 0;
+        }
+
+        /* 飞轮图示 */
+        .flywheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 40px auto;
+        }
+
+        .flywheel-circle {
+            width: 100%;
+            height: 100%;
+            border: 3px solid rgba(231, 76, 60, 0.3);
+            border-radius: 50%;
+            position: relative;
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .flywheel-item {
+            position: absolute;
+            font-size: 18px;
+            color: #ffffff;
+            font-weight: 300;
+            white-space: nowrap;
+        }
+
+        .flywheel-item:nth-child(1) { top: -15px; left: 50%; transform: translateX(-50%); }
+        .flywheel-item:nth-child(2) { top: 30%; right: -40px; }
+        .flywheel-item:nth-child(3) { bottom: 30%; right: -50px; }
+        .flywheel-item:nth-child(4) { bottom: -15px; left: 50%; transform: translateX(-50%); }
+        .flywheel-item:nth-child(5) { bottom: 30%; left: -50px; }
+        .flywheel-item:nth-child(6) { top: 30%; left: -40px; }
+
+        .flywheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            color: #E74C3C;
+            font-weight: 600;
+        }
+
+        /* 箭头 */
+        .arrow {
+            position: absolute;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(231,76,60,0.5), rgba(231,76,60,1));
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #E74C3C;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+
+        /* 分隔线 */
+        .divider {
+            width: 100px;
+            height: 2px;
+            background: #E74C3C;
+            margin: 40px auto;
+            opacity: 0.5;
+        }
+
+        /* 导航按钮 */
+        .nav-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3);
+            color: #ffffff;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: rgba(231, 76, 60, 0.3);
+            border-color: #E74C3C;
+        }
+
+        .nav-btn.prev {
+            left: 40px;
+        }
+
+        .nav-btn.next {
+            right: 40px;
+        }
+
+        /* 页面指示器 */
+        .dots-container {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: #E74C3C;
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        .dot:hover {
+            background: rgba(231, 76, 60, 0.6);
+        }
+
+        /* 页码 */
+        .page-number {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.3);
+            font-weight: 300;
+            z-index: 100;
+        }
+
+        /* 特殊文字效果 */
+        .light-text {
+            font-weight: 200;
+        }
+
+        .medium-text {
+            font-weight: 400;
+        }
+
+        .bold-text {
+            font-weight: 600;
+        }
+
+        /* 卡片效果 */
+        .card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 40px 60px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        /* 列表样式 */
+        .point-list {
+            text-align: left;
+            max-width: 700px;
+        }
+
+        .point-item {
+            font-size: clamp(18px, 2.5vw, 26px);
+            color: rgba(255,255,255,0.8);
+            line-height: 2;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .point-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background: #E74C3C;
+            border-radius: 50%;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 30px;
+            }
+
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .nav-btn.prev {
+                left: 20px;
+            }
+
+            .nav-btn.next {
+                right: 20px;
+            }
+
+            .three-actions {
+                gap: 30px;
+            }
+
+            .flywheel-container {
+                width: 280px;
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Slide 1: 封面 -->
+        <div class="slide gradient-1 active">
+            <h1 class="main-title">
+                财富不是一次性的胜利<br>
+                而是一个<span class="title-accent">能自我加速的系统</span>
+            </h1>
+            <div class="divider"></div>
+            <p class="subtitle">你不需要更努力，你需要一个飞轮</p>
+        </div>
+
+        <!-- Slide 2: 三个零件 -->
+        <div class="slide gradient-2">
+            <h2 class="main-title">它们不是<span class="title-accent">"任务清单"</span></h2>
+            <div class="three-actions">
+                <div class="action-item">
+                    <div class="action-number">01</div>
+                    <div class="action-title">每天写</div>
+                    <div class="action-desc">大脑升级</div>
+                </div>
+                <div class="action-item">
+                    <div class="action-number">02</div>
+                    <div class="action-title">每天拍</div>
+                    <div class="action-desc">扩大幸运</div>
+                </div>
+                <div class="action-item">
+                    <div class="action-number">03</div>
+                    <div class="action-title">每天复盘</div>
+                    <div class="action-desc">系统升级</div>
+                </div>
+            </div>
+            <p class="subtitle" style="margin-top: 60px;">它们是引擎的<span class="highlight">三个零件</span></p>
+        </div>
+
+        <!-- Slide 3: 每天写 -->
+        <div class="slide gradient-3">
+            <div class="card">
+                <h2 class="main-title" style="font-size: clamp(56px, 9vw, 96px);">每天写</h2>
+                <div class="divider"></div>
+                <p class="quote-text">
+                    把大脑从<span class="highlight">硬盘</span>升级成<span class="highlight">CPU</span>
+                </p>
+                <div class="point-list" style="margin-top: 50px;">
+                    <div class="point-item">把模糊的想法线性化</div>
+                    <div class="point-item">把散落的知识串起来</div>
+                    <div class="point-item">在句子里看见漏洞，在结构里看见连接</div>
+                    <div class="point-item">长期记录的思考，结晶成可复用的模块</div>
+                </div>
+                <p class="subtitle" style="margin-top: 50px;">AI 时代：信息不稀缺，<span class="highlight">清晰才稀缺</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 4: 每天拍 -->
+        <div class="slide gradient-1">
+            <div class="card">
+                <h2 class="main-title" style="font-size: clamp(56px, 9vw, 96px);">每天拍</h2>
+                <div class="divider"></div>
+                <p class="quote-text">
+                    扩大你的<span class="highlight">幸运表面积</span>
+                </p>
+                <div class="point-list" style="margin-top: 50px;">
+                    <div class="point-item">机会不是被"找到"的，机会是被"遇到"的</div>
+                    <div class="point-item">公开表达越多，世界越容易对你做出回应</div>
+                    <div class="point-item">三分钟电梯演讲的训练场</div>
+                    <div class="point-item">影响力把时间从线性收益变成复利收益</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 每天复盘 -->
+        <div class="slide gradient-2">
+            <div class="card">
+                <h2 class="main-title" style="font-size: clamp(56px, 9vw, 96px);">每天复盘</h2>
+                <div class="divider"></div>
+                <p class="quote-text">
+                    <span class="highlight">系统升级</span>
+                </p>
+                <div class="point-list" style="margin-top: 50px;">
+                    <div class="point-item">贫穷往往不是因为不勤奋</div>
+                    <div class="point-item">而是做了无价值的劳作、做错了判断</div>
+                    <div class="point-item">用系统替代蛮力，像拖拉机替代人力</div>
+                    <div class="point-item">发现认知 bug 就迭代版本</div>
+                </div>
+                <p class="subtitle" style="margin-top: 50px;">别把自己停在 <span class="highlight">Win95</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 6: 飞轮效应 -->
+        <div class="slide gradient-3">
+            <h2 class="main-title" style="font-size: clamp(36px, 5vw, 64px);">飞轮转起来</h2>
+            <div class="flywheel-container">
+                <div class="flywheel-circle">
+                    <div class="flywheel-item">写</div>
+                    <div class="flywheel-item">拍</div>
+                    <div class="flywheel-item">反馈</div>
+                    <div class="flywheel-item">复盘</div>
+                    <div class="flywheel-item">升级</div>
+                    <div class="flywheel-item">再写</div>
+                </div>
+                <div class="flywheel-center">飞轮</div>
+            </div>
+            <p class="subtitle">
+                写作给你<span class="highlight">深度</span> · 视频给你<span class="highlight">广度</span> · 复盘给你<span class="highlight">校准</span>
+            </p>
+        </div>
+
+        <!-- Slide 7: 结尾 -->
+        <div class="slide gradient-1">
+            <div class="quote-mark">"</div>
+            <h2 class="main-title" style="font-size: clamp(42px, 6vw, 84px);">
+                飞轮转起来<br>
+                <span style="font-weight: 200; font-size: 0.7em;">财富只是副产品</span>
+            </h2>
+            <div class="divider"></div>
+            <p class="subtitle" style="font-size: clamp(24px, 4vw, 42px); margin-top: 60px;">
+                你真正拥有的<br>
+                是一个<span class="highlight">会自己增长的人</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- 导航按钮 -->
+    <button class="nav-btn prev" onclick="changeSlide(-1)">‹</button>
+    <button class="nav-btn next" onclick="changeSlide(1)">›</button>
+
+    <!-- 页面指示器 -->
+    <div class="dots-container" id="dots"></div>
+
+    <!-- 页码 -->
+    <div class="page-number" id="pageNumber">1 / 7</div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const dotsContainer = document.getElementById('dots');
+        const pageNumber = document.getElementById('pageNumber');
+
+        // 创建指示点
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i === 0 ? ' active' : '');
+            dot.onclick = () => goToSlide(i);
+            dotsContainer.appendChild(dot);
+        }
+
+        const dots = document.querySelectorAll('.dot');
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active');
+                if (index === currentSlide) {
+                    dot.classList.add('active');
+                }
+            });
+
+            pageNumber.textContent = `${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        function changeSlide(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+            updateSlide();
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlide();
+        }
+
+        // 键盘导航
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                changeSlide(-1);
+            }
+        });
+
+        // 触摸滑动支持
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    changeSlide(1); // 向左滑动，下一页
+                } else {
+                    changeSlide(-1); // 向右滑动，上一页
+                }
+            }
+        }
+    </script>
+</body>
+</html>

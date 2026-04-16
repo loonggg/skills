@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI时代的SOP - 从文档到源代码</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            padding: 60px;
+        }
+
+        .slide.active {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        /* TED Red Slide */
+        .slide.ted-red {
+            background: #E62B1E;
+        }
+
+        /* Black Slide */
+        .slide.black {
+            background: #000000;
+        }
+
+        /* Dark Gray Slide */
+        .slide.dark-gray {
+            background: #1a1a1a;
+        }
+
+        /* White Slide */
+        .slide.white {
+            background: #FFFFFF;
+        }
+
+        /* Main Title */
+        .main-title {
+            font-size: clamp(48px, 8vw, 100px);
+            font-weight: 700;
+            color: #FFFFFF;
+            text-align: center;
+            line-height: 1.2;
+            margin-bottom: 30px;
+        }
+
+        .main-title.white-text {
+            color: #FFFFFF;
+        }
+
+        .main-title.black-text {
+            color: #000000;
+        }
+
+        /* Subtitle */
+        .subtitle {
+            font-size: clamp(24px, 4vw, 42px);
+            font-weight: 300;
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            max-width: 1000px;
+            line-height: 1.5;
+            margin-top: 30px;
+        }
+
+        .subtitle.black-text {
+            color: #000000;
+        }
+
+        /* Accent */
+        .accent {
+            color: #E62B1E;
+            font-weight: 600;
+        }
+
+        .accent-yellow {
+            color: #FFC107;
+            font-weight: 600;
+        }
+
+        /* Quote */
+        .quote-container {
+            max-width: 1100px;
+            text-align: center;
+        }
+
+        .quote-mark {
+            font-size: 120px;
+            color: #E62B1E;
+            opacity: 0.3;
+            line-height: 0.5;
+        }
+
+        .quote-text {
+            font-size: clamp(28px, 4.5vw, 48px);
+            font-weight: 400;
+            color: #FFFFFF;
+            line-height: 1.6;
+            margin: 40px 0;
+        }
+
+        .quote-text.black {
+            color: #000000;
+        }
+
+        /* Comparison */
+        .comparison {
+            display: flex;
+            gap: 60px;
+            margin-top: 50px;
+        }
+
+        .compare-box {
+            flex: 1;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 450px;
+        }
+
+        .compare-box.bad {
+            background: rgba(230, 43, 30, 0.1);
+            border: 2px solid rgba(230, 43, 30, 0.3);
+        }
+
+        .compare-box.good {
+            background: rgba(76, 175, 80, 0.1);
+            border: 2px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .compare-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .compare-box.bad .compare-title {
+            color: #E62B1E;
+        }
+
+        .compare-box.good .compare-title {
+            color: #4CAF50;
+        }
+
+        .compare-content {
+            font-size: 18px;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.6;
+        }
+
+        .compare-content.black {
+            color: rgba(0,0,0,0.8);
+        }
+
+        /* Key Point Box */
+        .key-point {
+            background: rgba(230, 43, 30, 0.15);
+            border-left: 6px solid #E62B1E;
+            padding: 30px 40px;
+            max-width: 900px;
+            margin: 30px auto;
+            border-radius: 8px;
+        }
+
+        .key-point p {
+            font-size: clamp(22px, 3.5vw, 36px);
+            color: #FFFFFF;
+            font-weight: 400;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .key-point p.black {
+            color: #000000;
+        }
+
+        /* List */
+        .point-list {
+            max-width: 900px;
+            margin: 30px auto;
+        }
+
+        .point-item {
+            font-size: clamp(20px, 3vw, 28px);
+            color: rgba(255,255,255,0.9);
+            line-height: 1.8;
+            padding-left: 40px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .point-item.black {
+            color: rgba(0,0,0,0.9);
+        }
+
+        .point-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 8px;
+            height: 8px;
+            background: #E62B1E;
+            border-radius: 50%;
+        }
+
+        /* Big Statement */
+        .big-statement {
+            font-size: clamp(42px, 6vw, 72px);
+            font-weight: 700;
+            color: #FFFFFF;
+            text-align: center;
+            line-height: 1.3;
+            max-width: 1100px;
+        }
+
+        .big-statement.black {
+            color: #000000;
+        }
+
+        /* Divider */
+        .divider {
+            width: 100px;
+            height: 4px;
+            background: #E62B1E;
+            margin: 30px auto;
+        }
+
+        /* Navigation */
+        .nav-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.5);
+            color: #ffffff;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            background: #E62B1E;
+            border-color: #E62B1E;
+        }
+
+        .nav-btn.prev { left: 40px; }
+        .nav-btn.next { right: 40px; }
+
+        /* Dots */
+        .dots-container {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: #E62B1E;
+            width: 36px;
+            border-radius: 6px;
+        }
+
+        .dot:hover {
+            background: rgba(230, 43, 30, 0.7);
+        }
+
+        /* Page Number */
+        .page-number {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            font-weight: 300;
+            z-index: 100;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .slide { padding: 30px; }
+            .nav-btn { width: 44px; height: 44px; font-size: 18px; }
+            .nav-btn.prev { left: 20px; }
+            .nav-btn.next { right: 20px; }
+            .comparison { flex-direction: column; gap: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Slide 1: Cover -->
+        <div class="slide ted-red active">
+            <h1 class="main-title">AI 时代的 SOP</h1>
+            <div class="divider"></div>
+            <p class="subtitle">从文档到源代码</p>
+        </div>
+
+        <!-- Slide 2: Core Message -->
+        <div class="slide black">
+            <h1 class="main-title white-text">真正值钱的不是模型</h1>
+            <div class="key-point">
+                <p>而是一套<span class="accent-yellow">"能打赢仗的做事方法"</span></p>
+            </div>
+            <p class="subtitle" style="margin-top: 50px;">这就是 SOP</p>
+        </div>
+
+        <!-- Slide 3: SOP as Source Code -->
+        <div class="slide dark-gray">
+            <p class="quote-mark">"</p>
+            <div class="quote-container">
+                <p class="quote-text">
+                    SOP，在今天，已经不是文档<br>
+                    而是公司的<span class="accent">"源代码"</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 4: AI as Leverage -->
+        <div class="slide black">
+            <h1 class="main-title white-text" style="font-size: clamp(40px, 6vw, 64px);">AI 是杠杆</h1>
+            <div class="key-point">
+                <p>杠杆本身不会决定你能不能成功<br>它只负责一件事：<span class="accent-yellow">放大</span></p>
+            </div>
+            <div class="comparison">
+                <div class="compare-box bad">
+                    <div class="compare-title">❌ 模糊的指令</div>
+                    <div class="compare-content">拍脑袋、前后矛盾<br>AI 会放大"混乱"</div>
+                </div>
+                <div class="compare-box good">
+                    <div class="compare-title">✓ 清晰的方法</div>
+                    <div class="compare-content">成熟、验证过的逻辑<br>效率放大 100 倍、1000 倍</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: GIGO -->
+        <div class="slide ted-red">
+            <p class="quote-mark" style="color: rgba(255,255,255,0.3);">"</p>
+            <div class="quote-container">
+                <p class="quote-text" style="color: #FFFFFF;">
+                    垃圾进，垃圾出
+                </p>
+                <p class="subtitle" style="font-size: clamp(18px, 2.5vw, 28px); margin-top: 40px;">
+                    Garbage In, Garbage Out
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 6: What is Real SOP -->
+        <div class="slide dark-gray">
+            <h1 class="main-title white-text" style="font-size: clamp(36px, 5vw, 56px);">什么是真正的 SOP？</h1>
+            <div class="point-list">
+                <div class="point-item">不是"你要干什么动作"</div>
+                <div class="point-item">而是<span class="accent">成功经验的逻辑化和结构化</span></div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Milk Tea Example -->
+        <div class="slide black">
+            <h1 class="main-title white-text" style="font-size: clamp(32px, 4.5vw, 48px);">奶茶店的例子</h1>
+            <div class="comparison">
+                <div class="compare-box bad">
+                    <div class="compare-title">普通 SOP</div>
+                    <div class="compare-content">
+                        客人进店要微笑<br>
+                        问要不要加冰<br>
+                        收钱、出单
+                    </div>
+                </div>
+                <div class="compare-box good">
+                    <div class="compare-title">真正赚钱的经验</div>
+                    <div class="compare-content">
+                        哪种客人推荐什么？<br>
+                        什么时候推新品成功率最高？<br>
+                        犹豫时哪句话最容易下单？
+                    </div>
+                </div>
+            </div>
+            <p class="subtitle" style="margin-top: 40px; font-size: clamp(18px, 2.5vw, 26px);">
+                这些东西，往往只在<span class="accent-yellow">老员工脑子里</span>
+            </p>
+        </div>
+
+        <!-- Slide 8: AI Wants Experience -->
+        <div class="slide dark-gray">
+            <p class="quote-mark">"</p>
+            <div class="quote-container">
+                <p class="quote-text">
+                    AI 要的，恰恰就是这些<span class="accent">"老员工的脑子"</span>
+                </p>
+            </div>
+            <div class="key-point" style="margin-top: 50px;">
+                <p>把过去几年里的成交经验<br>全部拆解成一步一步的规则<br>再交给 AI</p>
+            </div>
+        </div>
+
+        <!-- Slide 9: The Result -->
+        <div class="slide black">
+            <h1 class="main-title white-text" style="font-size: clamp(36px, 5vw, 56px);">这时候的 AI</h1>
+            <p class="subtitle" style="font-size: clamp(24px, 3.5vw, 38px);">
+                不只是"会说话"<br>
+                而是像一个<span class="accent">训练多年的销冠</span><br>
+                在同时服务<span class="accent-yellow">上百个客户</span>
+            </p>
+        </div>
+
+        <!-- Slide 10: The Core Question -->
+        <div class="slide dark-gray">
+            <h1 class="main-title white-text" style="font-size: clamp(32px, 4.5vw, 52px);">问题不在于</h1>
+            <div class="key-point">
+                <p>你用的是不是最强的 AI 模型<br><br>而在于：<span class="accent-yellow">你有没有一套清楚、能复用、讲得明白的做事逻辑</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 11: Competition Returns to Essence -->
+        <div class="slide ted-red">
+            <p class="quote-mark" style="color: rgba(255,255,255,0.3);">"</p>
+            <div class="quote-container">
+                <p class="quote-text" style="color: #FFFFFF;">
+                    AI 并没有改变商业的本质<br><br>
+                    它只是把竞争，从：<span style="font-weight: 300; font-size: 0.8em;">拼人多，拼加班，拼谁更累</span><br><br>
+                    拉回到了最原始的一点：<span class="accent-yellow">谁的逻辑更清楚，谁就赢</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 12: Call to Action -->
+        <div class="slide black">
+            <h1 class="big-statement">
+                当你还把 SOP 当成<br>应付检查的文档时
+            </h1>
+            <div class="divider"></div>
+            <p class="subtitle" style="font-size: clamp(22px, 3.5vw, 36px);">
+                那些把 SOP 当<span class="accent">"源代码"</span>来写的公司<br>
+                已经在用算力，碾压人力了
+            </p>
+        </div>
+
+        <!-- Slide 13: Closing -->
+        <div class="slide dark-gray">
+            <div class="quote-container">
+                <p class="quote-text">
+                    未来淘汰的<br>
+                    不是人，也不是公司<br>
+                    <br>
+                    而是那种<br>
+                    <span class="accent">"大家差不多，靠感觉干活"</span><br>
+                    的<span class="accent-yellow">草台班子</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <button class="nav-btn prev" onclick="changeSlide(-1)">‹</button>
+    <button class="nav-btn next" onclick="changeSlide(1)">›</button>
+
+    <div class="dots-container" id="dots"></div>
+    <div class="page-number" id="pageNumber">1 / 13</div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const dotsContainer = document.getElementById('dots');
+        const pageNumber = document.getElementById('pageNumber');
+
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i === 0 ? ' active' : '');
+            dot.onclick = () => goToSlide(i);
+            dotsContainer.appendChild(dot);
+        }
+
+        const dots = document.querySelectorAll('.dot');
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) slide.classList.add('active');
+            });
+
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active');
+                if (index === currentSlide) dot.classList.add('active');
+            });
+
+            pageNumber.textContent = `${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        function changeSlide(dir) {
+            currentSlide += dir;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+            updateSlide();
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlide();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                changeSlide(-1);
+            }
+        });
+
+        let touchStartX = 0, touchEndX = 0;
+        document.addEventListener('touchstart', (e) => touchStartX = e.changedTouches[0].screenX);
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1);
+        });
+    </script>
+</body>
+</html>
