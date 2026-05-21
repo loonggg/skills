@@ -548,6 +548,9 @@ class GoGame {
     this.moveCount = 0;
     this.lastMove = null;
     this.moveList = [];
+    this.scoringPhase = false;
+    this.deadStones = []; // [[x, y, color], ...]
+    this.scoringConfirmed = { 1: false, 2: false };
   }
 
   opponent(player) { return player === 1 ? 2 : 1; }
@@ -708,8 +711,9 @@ class GoGame {
     this.current = this.opponent(player);
 
     if (this.consecutivePasses >= 2) {
-      this.gameOver = true;
-      return { success: true, gameOver: true };
+      this.scoringPhase = true;
+      this.current = 1; // 黑方先标记死子
+      return { success: true, scoringPhase: true };
     }
 
     return { success: true };
@@ -718,6 +722,47 @@ class GoGame {
   resign() {
     if (this.gameOver) return;
     this.gameOver = true;
+  }
+
+  // Mark/unmark a dead stone during scoring phase
+  markDeadStone(x, y) {
+    if (!this.scoringPhase || this.gameOver) return { success: false, message: '不在死子标记阶段' };
+    if (x < 0 || x >= this.size || y < 0 || y >= this.size) return { success: false, message: '超出棋盘' };
+    const stone = this.board[y][x];
+    if (stone === 0) return { success: false, message: '此处无子' };
+
+    const idx = this.deadStones.findIndex(([dx, dy]) => dx === x && dy === y);
+    if (idx >= 0) {
+      // Unmark
+      this.deadStones.splice(idx, 1);
+      return { success: true, action: 'unmark' };
+    } else {
+      // Mark as dead
+      this.deadStones.push([x, y, stone]);
+      return { success: true, action: 'mark' };
+    }
+  }
+
+  // Confirm scoring and remove dead stones
+  confirmScoring() {
+    if (!this.scoringPhase || this.gameOver) return { success: false, message: '不在死子标记阶段' };
+
+    this.scoringConfirmed[this.current] = true;
+
+    // If both players confirmed, remove dead stones and calculate score
+    if (this.scoringConfirmed[1] && this.scoringConfirmed[2]) {
+      for (const [x, y, color] of this.deadStones) {
+        this.board[y][x] = 0;
+        this.captures[this.opponent(color)]++;
+      }
+      this.scoringPhase = false;
+      this.gameOver = true;
+      return { success: true, finished: true };
+    }
+
+    // Switch to other player for confirmation
+    this.current = this.opponent(this.current);
+    return { success: true, finished: false };
   }
 
   undo() {
@@ -914,10 +959,18 @@ function drawBoard() {
   // Hover indicator
   if (hoverPos && !game.gameOver) {
     const [hx, hy] = hoverPos;
-    if (game.board[hy][hx] === 0) {
-      const cx = padding + hx * cellSize;
-      const cy = padding + hy * cellSize;
-      const r = cellSize * 0.42;
+    const cx = padding + hx * cellSize;
+    const cy = padding + hy * cellSize;
+    const r = cellSize * 0.42;
+    if (game.scoringPhase) {
+      // In scoring phase, hover on stones to mark dead
+      if (game.board[hy][hx] !== 0) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+        ctx.fill();
+      }
+    } else if (game.board[hy][hx] === 0) {
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.fillStyle = game.current === 1 ? 'rgba(26, 26, 26, 0.25)' : 'rgba(245, 245, 240, 0.3)';
@@ -934,8 +987,32 @@ function drawBoard() {
     }
   }
 
+  // Dead stone markers
+  if (game.scoringPhase) {
+    for (const [dx, dy] of game.deadStones) {
+      const cx = padding + dx * cellSize;
+      const cy = padding + dy * cellSize;
+      const r = cellSize * 0.44;
+      // Semi-transparent red overlay
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+      ctx.fill();
+      // X mark
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 2;
+      const offset = r * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - offset, cy - offset);
+      ctx.lineTo(cx + offset, cy + offset);
+      ctx.moveTo(cx + offset, cy - offset);
+      ctx.lineTo(cx - offset, cy + offset);
+      ctx.stroke();
+    }
+  }
+
   // Last move indicator
-  if (game.lastMove) {
+  if (game.lastMove && !game.scoringPhase) {
     const [lx, ly] = game.lastMove;
     const cx = padding + lx * cellSize;
     const cy = padding + ly * cellSize;
@@ -1023,8 +1100,20 @@ canvas.addEventListener('mouseleave', () => {
 canvas.addEventListener('click', (e) => {
   const pos = getBoardPos(e);
   if (!pos) return;
+  const [x, y] = pos;
 
-  const result = game.play(pos[0], pos[1]);
+  if (game.scoringPhase) {
+    const result = game.markDeadStone(x, y);
+    if (result.success) {
+      showToast(result.action === 'mark' ? '标记死子' : '取消标记');
+    } else {
+      showToast(result.message);
+    }
+    drawBoard();
+    return;
+  }
+
+  const result = game.play(x, y);
   if (result.success) {
     updateUI();
     if (result.captured && result.captured.length > 0) {
@@ -1042,8 +1131,20 @@ canvas.addEventListener('touchstart', (e) => {
   const touch = e.touches[0];
   const pos = getBoardPos(touch);
   if (!pos) return;
+  const [x, y] = pos;
 
-  const result = game.play(pos[0], pos[1]);
+  if (game.scoringPhase) {
+    const result = game.markDeadStone(x, y);
+    if (result.success) {
+      showToast(result.action === 'mark' ? '标记死子' : '取消标记');
+    } else {
+      showToast(result.message);
+    }
+    drawBoard();
+    return;
+  }
+
+  const result = game.play(x, y);
   if (result.success) {
     updateUI();
     if (result.captured && result.captured.length > 0) {
@@ -1057,19 +1158,40 @@ canvas.addEventListener('touchstart', (e) => {
 
 // ── Buttons ──
 document.getElementById('btn-pass').addEventListener('click', () => {
+  if (game.scoringPhase) {
+    const result = game.confirmScoring();
+    if (result.success) {
+      updateUI();
+      drawBoard();
+      if (result.finished) {
+        showResult();
+      } else {
+        showToast(`${game.current === 1 ? '黑方' : '白方'}请确认死子`);
+      }
+    }
+    return;
+  }
   const result = game.pass();
   if (result.success) {
     showToast(`${game.opponent(game.current) === 1 ? '黑方' : '白方'}虚手`);
     updateUI();
     drawBoard();
-    if (result.gameOver) {
-      showResult();
+    if (result.scoringPhase) {
+      showToast('双方虚手，进入死子标记阶段');
     }
   }
 });
 
 document.getElementById('btn-resign').addEventListener('click', () => {
   if (game.gameOver) return;
+  if (game.scoringPhase) {
+    // Skip dead stone marking and score directly
+    game.scoringPhase = false;
+    game.gameOver = true;
+    showResult();
+    updateUI();
+    return;
+  }
   const loser = game.current === 1 ? '黑方' : '白方';
   const winner = game.current === 1 ? '白方' : '黑方';
   game.resign();
@@ -1135,8 +1257,27 @@ function updateUI() {
   const statusEl = document.getElementById('status');
   if (game.gameOver) {
     statusEl.textContent = '对局结束';
+  } else if (game.scoringPhase) {
+    const confirmB = game.scoringConfirmed[1] ? '✓' : '○';
+    const confirmW = game.scoringConfirmed[2] ? '✓' : '○';
+    statusEl.textContent = `死子标记 · ${game.current === 1 ? '黑方' : '白方'}确认 (${confirmB}黑 ${confirmW}白)`;
   } else {
     statusEl.textContent = `${game.current === 1 ? '黑方' : '白方'}执子 · 第 ${game.moveCount + 1} 手`;
+  }
+
+  // Update button labels for scoring phase
+  const passBtn = document.getElementById('btn-pass');
+  const resignBtn = document.getElementById('btn-resign');
+  if (game.scoringPhase) {
+    passBtn.textContent = '确认死子';
+    passBtn.setAttribute('aria-label', '确认死子');
+    resignBtn.textContent = '跳过标记';
+    resignBtn.setAttribute('aria-label', '跳过标记直接计分');
+  } else {
+    passBtn.textContent = '虚手';
+    passBtn.setAttribute('aria-label', '虚手');
+    resignBtn.textContent = '认输';
+    resignBtn.setAttribute('aria-label', '认输');
   }
 
   // Move history
