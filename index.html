@@ -805,6 +805,49 @@ let padding = 20;
 let hoverPos = null;
 let dpr = window.devicePixelRatio || 1;
 
+// ── Wood grain cache (OffscreenCanvas) ──
+// Pre-render wood grain once per resize; reuse on every drawBoard() call.
+let woodGrainCache = null;
+
+function buildWoodGrainCache(canvasSize) {
+  const pw = canvasSize * dpr;
+  const offscreen = (typeof OffscreenCanvas !== 'undefined')
+    ? new OffscreenCanvas(pw, pw)
+    : (() => { const c = document.createElement('canvas'); c.width = pw; c.height = pw; return c; })();
+  const octx = offscreen.getContext('2d');
+  octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Background gradient
+  const grad = octx.createLinearGradient(0, 0, canvasSize, canvasSize);
+  grad.addColorStop(0,   '#DCB35C');
+  grad.addColorStop(0.3, '#D4A84A');
+  grad.addColorStop(0.5, '#DCB35C');
+  grad.addColorStop(0.7, '#C9A045');
+  grad.addColorStop(1,   '#DCB35C');
+  octx.fillStyle = grad;
+  octx.fillRect(0, 0, canvasSize, canvasSize);
+
+  // Subtle wood grain lines — deterministic pseudo-random for stable output
+  octx.save();
+  octx.globalAlpha = 0.06;
+  for (let i = 0; i < 40; i++) {
+    const t = i / 40;
+    const y  = t * canvasSize + ((i * 137.508) % 1) * (canvasSize / 40);
+    const dy1 = ((i * 73.1) % 16) - 8;
+    const dy2 = ((i * 53.7) % 16) - 8;
+    const lw  = ((i * 31.3) % 1.5) + 0.5;
+    octx.beginPath();
+    octx.moveTo(0, y);
+    octx.bezierCurveTo(canvasSize * 0.3, y + dy1, canvasSize * 0.7, y + dy2, canvasSize, y);
+    octx.strokeStyle = '#8B6914';
+    octx.lineWidth = lw;
+    octx.stroke();
+  }
+  octx.restore();
+
+  return offscreen;
+}
+
 // Star points for each board size
 const starPoints = {
   9: [[2,2],[6,2],[4,4],[2,6],[6,6]],
@@ -829,34 +872,21 @@ function resizeBoard() {
   canvas.width = canvasSize * dpr;
   canvas.height = canvasSize * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Rebuild wood grain cache for new canvas size (DPR-aware)
+  woodGrainCache = buildWoodGrainCache(canvasSize);
 }
 
 function drawBoard() {
   const w = cellSize * (boardSize - 1) + padding * 2;
 
-  // Wood texture background
-  const grad = ctx.createLinearGradient(0, 0, w, w);
-  grad.addColorStop(0, '#DCB35C');
-  grad.addColorStop(0.3, '#D4A84A');
-  grad.addColorStop(0.5, '#DCB35C');
-  grad.addColorStop(0.7, '#C9A045');
-  grad.addColorStop(1, '#DCB35C');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, w);
-
-  // Subtle wood grain
-  ctx.save();
-  ctx.globalAlpha = 0.06;
-  for (let i = 0; i < 40; i++) {
-    const y = Math.random() * w;
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.bezierCurveTo(w * 0.3, y + (Math.random() - 0.5) * 8, w * 0.7, y + (Math.random() - 0.5) * 8, w, y);
-    ctx.strokeStyle = '#8B6914';
-    ctx.lineWidth = Math.random() * 2 + 0.5;
-    ctx.stroke();
+  // Draw cached wood grain background (pre-rendered at resize time, DPR-aware)
+  if (woodGrainCache) {
+    ctx.drawImage(woodGrainCache, 0, 0, w, w);
+  } else {
+    ctx.fillStyle = '#DCB35C';
+    ctx.fillRect(0, 0, w, w);
   }
-  ctx.restore();
 
   // Grid lines
   ctx.strokeStyle = 'rgba(26, 26, 26, 0.7)';
