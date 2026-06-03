@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>墨迹手绘信息图</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #1a1a1a;
+    --orange: #E8613C;
+    --red: #C0392B;
+    --blue: #3D7EA6;
+    --white: #FFFFFF;
+    --serif: 'Noto Serif SC', Georgia, serif;
+  }
+
+  html, body {
+    width: 2560px;
+    height: 1440px;
+    overflow: hidden;
+    background: var(--white);
+  }
+
+  .canvas {
+    width: 2560px;
+    height: 1440px;
+    background: var(--white);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 手绘线条基础样式 */
+  .line {
+    stroke: var(--black);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  .line-thick {
+    stroke-width: 4;
+  }
+
+  .line-orange {
+    stroke: var(--orange);
+  }
+
+  .line-red {
+    stroke: var(--red);
+  }
+
+  .line-blue {
+    stroke: var(--blue);
+  }
+
+  /* 中文标注 */
+  .label {
+    font-family: var(--serif);
+    font-size: 16px;
+    fill: var(--black);
+    text-anchor: middle;
+  }
+
+  .label-orange {
+    fill: var(--orange);
+  }
+
+  .label-red {
+    fill: var(--red);
+  }
+
+  /* 箭头 */
+  .arrow {
+    fill: var(--orange);
+    stroke: none;
+  }
+
+  .arrow-black {
+    fill: var(--black);
+  }
+
+  /* 墨迹基础 */
+  .moji-body {
+    fill: var(--black);
+    stroke: none;
+  }
+
+  .moji-eye {
+    fill: var(--white);
+    stroke: none;
+  }
+
+  .moji-leg {
+    stroke: var(--black);
+    stroke-width: 2;
+    stroke-linecap: round;
+    fill: none;
+  }
+
+  .moji-arm {
+    stroke: var(--black);
+    stroke-width: 2;
+    stroke-linecap: round;
+    fill: none;
+  }
+
+  /* 手绘方框 */
+  .sketch-rect {
+    stroke: var(--black);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    rx: 0;
+    ry: 0;
+  }
+
+  /* 手绘圆 */
+  .sketch-circle {
+    stroke: var(--black);
+    stroke-width: 2.5;
+    fill: none;
+  }
+
+  /* 连接线 */
+  .connector {
+    stroke: var(--black);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+    stroke-linecap: round;
+    fill: none;
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <svg width="2560" height="1440" viewBox="0 0 1280 720">
+    <!-- 在此绘制内容 -->
+
+  </svg>
+</div>
+</body>
+</html>
